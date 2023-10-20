@@ -32,9 +32,12 @@ print(device)
 use_cuda = torch.cuda.is_available()
 print(use_cuda)
 
-train_dir = "Users/jacksusank/Downloads/P-ai/fridge_data/food_data_set_training"
+train_dir = "/Users/jacksusank/Downloads/p-ai/fridge_data/food_data_set_training/images"
 
-white_torch = torchvision.io.read_image("/Users/jacksusank/Downloads/P-ai/fridge_data/food_data_set_training/images/apple_pie/134.jpg")
+white_torch = torchvision.io.read_image("/Users/jacksusank/Downloads/p-ai/fridge_data/food_data_set_training/images/apple_pie/134.jpg")
+# print (white_torch)
 
-print("This is benign skin cancer")
-T.ToPILImage()(white_torch)
+print("This is a picture of apple pie")
+# T.ToPILImage()(white_torch)
+T.ToPILImage()(white_torch).show()
+
