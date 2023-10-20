@@ -26,18 +26,15 @@ warnings.filterwarnings("ignore")
 
 print(torch. __version__)
 
-1.11.0+cu113
-
-# Setup device agnostic code
 device = "cuda" if torch.cuda.is_available() else "cpu"
-device
+print(device)
 
-'cpu'
-
-
-# Find out if a GPU is available
 use_cuda = torch.cuda.is_available()
-use_cuda
+print(use_cuda)
 
-# this is a test again
-# another change
+train_dir = "Users/jacksusank/Downloads/P-ai/fridge_data/food_data_set_training"
+
+white_torch = torchvision.io.read_image("/Users/jacksusank/Downloads/P-ai/fridge_data/food_data_set_training/images/apple_pie/134.jpg")
+
+print("This is benign skin cancer")
+T.ToPILImage()(white_torch)
