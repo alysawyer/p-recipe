@@ -53,7 +53,7 @@ def get_main_ingr(recipe_title):
     for word in recipe_word_l:
         if word in all_ingredients:
             ingr_name_list.append(word)
-    print(ingr_name_list, "in title of recipe")
+    #print(ingr_name_list, "in title of recipe")
     return get_ingr_ids(ingr_name_list)
 
 def get_avg_rating(recipe_id):
@@ -115,3 +115,45 @@ def display_recipe(recipe_pool):
         recipe_counter += 1
 
 
+def get_ingredients(recipe_id):
+    """given a recipe id, get its ingredients
+    Return a list of ingredient IDs, for recipe with given ID"""
+    all_recipe_ids = raw_recipes_df['id'].tolist()
+    recipe_ind = all_recipe_ids.index(recipe_id)
+    recipe_row = raw_recipes_df.iloc[recipe_ind]
+    ingredients = recipe_row["ingredients"]
+    print(ingredients)
+    return get_ingr_ids(ingredients)
+
+
+def get_missing_ingredients(recipe_id, list_of_ingr):
+    """given a recipe id and a list of ingredients, return number of missing ingredients
+    Parameters: recipe_id (int id of recipe)
+    list_of_ingr: list of ingredient IDs  
+    Returns number of ingredients missing from recipe's ingredients"""
+
+    recipe_ingredients = get_ingredients(recipe_id)
+    counter = 0
+    for id in recipe_ingredients:
+        if id not in list_of_ingr:
+            counter += 1
+    return counter 
+
+#recipes sorted by main ingredient
+#key: main ingredient ID, value: list of recipe IDs with that main ingredient
+#a recipe can appear multiple times 
+sorted_recipes = {} 
+for id in ingr_map['id']:
+    sorted_recipes[id] = []
+sorted_recipes[-1] = [] #if a recipe has no main ingredient, add here
+for id in raw_recipes_df['id']:
+    recipe_name = map_recipe_id_name(id)
+    print(recipe_name)
+    main_ingredients = get_main_ingr(str(recipe_name))
+    for ingr in main_ingredients:
+        sorted_recipes[ingr].append(id)
+    if not main_ingredients:
+        sorted_recipes[-1].append(id)
+
+print(sorted_recipes[4110])
+#find_candidates
