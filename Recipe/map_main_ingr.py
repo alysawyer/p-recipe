@@ -5,10 +5,10 @@
 
 import pandas as pd
 
-from map_ingr import get_df_from_csv, get_main_ingr, map_recipe_id_name 
+from map_ingr import get_main_ingr, map_recipe_id_name 
 
 ingr_map = pd.read_pickle('ingr_map.pkl')
-raw_recipes_df = get_df_from_csv('RAW_recipes.csv')
+raw_recipes_df = pd.read_csv('RAW_recipes.csv')
 
 
 #recipes sorted by main ingredient

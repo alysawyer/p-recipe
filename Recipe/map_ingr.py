@@ -6,15 +6,10 @@ import pandas as pd
 #unpickle the ingredient map
 ingr_map = pd.read_pickle('ingr_map.pkl')
 
-def get_df_from_csv(path):
-    """Make a dataframe from a csv file"""
-    new_df = pd.read_csv(path)
-    return new_df
-
 #get dataframes for all the needed csv files:
-path_start = ''
-recipe_df = get_df_from_csv('PP_recipes.csv')
-raw_recipes_df = get_df_from_csv('RAW_recipes.csv')
+recipe_df = pd.read_csv('PP_recipes.csv')
+raw_recipes_df = pd.read_csv('RAW_recipes.csv')
+raw_ratings_df = pd.read_csv('RAW_interactions.csv')
 
 
 def get_ingr_ids(list_of_ingr):
@@ -22,12 +17,19 @@ def get_ingr_ids(list_of_ingr):
             Parameter: list_of_ingr (a list of ingredient NAMES)
             Returns a list of ingredient IDs"""
     LoIngrIndex = []
+    allIngr = ingr_map['replaced'].tolist()
+    allFullNameIngr = ingr_map['raw_ingr'].tolist()
     for ingr in list_of_ingr:
-        #generate dataframe for all the ingredients that have a category matching the ingr
-        ingr_cat_df = ingr_map.query('replaced == @ingr')
-        #get the "id" from the first row in the df (all the same id)
-        ingr_id = ingr_cat_df.iloc[0]['id']
-        LoIngrIndex.append(ingr_id) #add to list of ingr ids
+        if ingr in allIngr:
+            ingrRow = allIngr.index(ingr)
+            ingr_id = ingr_map.iloc[ingrRow]['id']
+            LoIngrIndex.append(ingr_id) #add to list of ingr ids
+        else:
+            if ingr in allFullNameIngr:
+                ingrRow = allFullNameIngr.index(ingr)
+                ingr_id = ingr_map.iloc[ingrRow]['id']
+            else:
+                print(f"Uh oh, Ingr: {ingr} not recognized")
     return LoIngrIndex
 
 
@@ -125,7 +127,7 @@ def get_ingredients(recipe_id):
     recipe_row = raw_recipes_df.iloc[recipe_ind]
     ingredients = recipe_row["ingredients"]
     print(ingredients)
-    return get_ingr_ids(ingredients)
+    return get_ingr_ids(eval(ingredients))
 
 
 def get_num_missing_ingredients(recipe_id, list_of_ingr):
@@ -142,7 +144,8 @@ def get_num_missing_ingredients(recipe_id, list_of_ingr):
             counter += 1
     return counter 
 
-main_ingredient_map = get_df_from_csv('map_main_ingredients.csv')
+main_ingredient_map = pd.read_csv('map_main_ingredients.csv')
+
 
 
 #have not tested this much 
