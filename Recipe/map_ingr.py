@@ -1,4 +1,6 @@
 #import the pandas library
+import json
+from math import ceil
 import pandas as pd
 
 #unpickle the ingredient map
@@ -126,13 +128,14 @@ def get_ingredients(recipe_id):
     return get_ingr_ids(ingredients)
 
 
-def get_missing_ingredients(recipe_id, list_of_ingr):
+def get_num_missing_ingredients(recipe_id, list_of_ingr):
     """given a recipe id and a list of ingredients, return number of missing ingredients
     Parameters: recipe_id (int id of recipe)
     list_of_ingr: list of ingredient IDs  
     Returns number of ingredients missing from recipe's ingredients"""
 
     recipe_ingredients = get_ingredients(recipe_id)
+    #recipe_ingredients = [4308, 1910, 1168, 1, 2]
     counter = 0
     for id in recipe_ingredients:
         if id not in list_of_ingr:
@@ -140,3 +143,47 @@ def get_missing_ingredients(recipe_id, list_of_ingr):
     return counter 
 
 main_ingredient_map = get_df_from_csv('map_main_ingredients.csv')
+
+
+#have not tested this much 
+
+def find_candidates(list_of_ingr):
+    """given a list of ingredients, find recipes to consider recommending
+    list_of_ingr: list of ingredient IDs  
+    Returns list of dictionaries of recipe ID + number of missing ingredients"""
+    candidates = {}
+    for ingr in list_of_ingr:
+        all_ingr_ids = main_ingredient_map['Main Ingredient IDs'].tolist()
+        ingr_ind = all_ingr_ids.index(ingr)
+        ingr_row = main_ingredient_map.iloc[ingr_ind]
+        ingr_recipes = json.loads(ingr_row["Recipe IDs"])
+
+        for recipe in ingr_recipes:
+            recipe_ingredients = get_ingredients(recipe)
+            #recipe_ingredients = [4308, 1910, 1168, 1, 2]
+
+            #maybe there's a better way to do this
+            #total recipe ingredients / 4 rounded up 
+            max_missing_ingredients = ceil(len(recipe_ingredients) / 4) 
+            missing_ingredients = get_num_missing_ingredients(recipe, list_of_ingr)
+            if(missing_ingredients <= max_missing_ingredients):
+                candidates[recipe] = missing_ingredients #duplicate recipes won't appear twice in the dictionary 
+
+
+    ingr = -1
+    all_ingr_ids = raw_recipes_df['Main Ingredient IDs'].toList()
+    ingr_ind = all_ingr_ids.index(ingr)
+    ingr_row = main_ingredient_map.iloc[ingr_ind]
+    ingr_recipes = json.loads(ingr_row["Recipe IDs"])
+    #ingr_recipes = ingr_recipes[1:len(ingr_recipes)-1]
+    for recipe in ingr_recipes:
+        recipe_ingredients = get_ingredients(recipe)
+
+        max_missing_ingredients = ceil(len(recipe_ingredients) / 4) 
+        missing_ingredients = get_num_missing_ingredients(recipe, list_of_ingr)
+        if(missing_ingredients <= max_missing_ingredients):
+            candidates[recipe] = missing_ingredients 
+    return candidates
+
+ingredients = [4308, 1910, 1168]
+print(find_candidates(ingredients))
