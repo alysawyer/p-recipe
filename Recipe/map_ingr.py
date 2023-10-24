@@ -139,8 +139,4 @@ def get_missing_ingredients(recipe_id, list_of_ingr):
             counter += 1
     return counter 
 
-main_ingredients = {}
-for id in raw_recipes_df['id']:
-    main_ingredients[id] = get_main_ingr(str(map_recipe_id_name(id)))
-
-print(main_ingredients[112140])
+main_ingredient_map = get_df_from_csv('map_main_ingredients.csv')
