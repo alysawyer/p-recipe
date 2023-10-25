@@ -20,12 +20,12 @@ def get_ingr_ids(list_of_ingr):
     allIngr = ingr_map['replaced'].tolist()
     allFullNameIngr = ingr_map['raw_ingr'].tolist()
     for ingr in list_of_ingr:
-        if ingr in allIngr:
+        if ingr in set(allIngr):
             ingrRow = allIngr.index(ingr)
             ingr_id = ingr_map.iloc[ingrRow]['id']
             LoIngrIndex.append(ingr_id) #add to list of ingr ids
         else:
-            if ingr in allFullNameIngr:
+            if ingr in set(allFullNameIngr):
                 ingrRow = allFullNameIngr.index(ingr)
                 ingr_id = ingr_map.iloc[ingrRow]['id']
             else:
@@ -44,21 +44,6 @@ def map_recipe_id_name(recipe_id):
     return raw_recipes_df.iloc[recipe_ind]['name']
 
 
-def get_main_ingr(recipe_title):
-    """ get ingredients in a recipe title and return a list of ingredient ids in a recipe title
-            in theory identifying most significant ingredients in a recipe
-            Parameters: recipe_title (a string recipe name)
-            Returns a list of ingredient ids for ingredients in that title
-    """
-    recipe_word_l = recipe_title.split(' ')
-    ingr_name_list = []
-    all_ingredients = ingr_map['replaced'].tolist()
-
-    for word in recipe_word_l:
-        if word in all_ingredients:
-            ingr_name_list.append(word)
-    #print(ingr_name_list, "in title of recipe")
-    return get_ingr_ids(ingr_name_list)
 
 def get_avg_rating(recipe_id):
     """given a recipe_id, pull all of the relevant ratings, and calculate total and avg ratings for the recipe
@@ -122,12 +107,13 @@ def display_recipe(recipe_pool):
 def get_ingredients(recipe_id):
     """given a recipe id, get its ingredients
     Return a list of ingredient IDs, for recipe with given ID"""
-    all_recipe_ids = raw_recipes_df['id'].tolist()
+    all_recipe_ids = recipe_df['id'].tolist()
     recipe_ind = all_recipe_ids.index(recipe_id)
-    recipe_row = raw_recipes_df.iloc[recipe_ind]
-    ingredients = recipe_row["ingredients"]
-    print(ingredients)
-    return get_ingr_ids(eval(ingredients))
+    recipe_row = recipe_df.iloc[recipe_ind]
+    ingredients = recipe_row["ingredient_ids"]
+    #print(ingredients)
+    return ingredients
+
 
 
 def get_num_missing_ingredients(recipe_id, list_of_ingr):
@@ -146,6 +132,16 @@ def get_num_missing_ingredients(recipe_id, list_of_ingr):
 
 main_ingredient_map = pd.read_csv('map_main_ingredients.csv')
 
+def get_main_ingr(recipe_id):
+    all_recipes = main_ingredient_map['Recipe IDs'].tolist()
+    all_ingr = main_ingredient_map['Main Ingredient IDs'].tolist()
+    ingredientL = []
+    for i in range(len(all_recipes)):
+        if recipe_id in all_recipes[i]:
+            ingredientL.append(all_ingr[i])
+    print(ingredientL)
+    return ingredientL
+
 
 
 #have not tested this much 
@@ -156,36 +152,45 @@ def find_candidates(list_of_ingr):
     Returns list of dictionaries of recipe ID + number of missing ingredients"""
     candidates = {}
     #treat each ingredient as main ingredient
+    all_ingr_ids = main_ingredient_map['Main Ingredient IDs'].tolist()
     for ingr in list_of_ingr: 
-        all_ingr_ids = main_ingredient_map['Main Ingredient IDs'].tolist()
-        ingr_ind = all_ingr_ids.index(ingr)
-        ingr_row = main_ingredient_map.iloc[ingr_ind]
-        ingr_recipes = json.loads(ingr_row["Recipe IDs"])
+        if ingr in all_ingr_ids:
+            ingr_ind = all_ingr_ids.index(ingr)
+            #ingr_row = main_ingredient_map.iloc[ingr_ind]
+            #ingr_recipes = json.loads(ingr_row["Recipe IDs"])
 
-        for recipe in ingr_recipes:
-            recipe_ingredients = get_ingredients(recipe)
-            #recipe_ingredients = [4308, 1910, 1168, 1, 2]
+            ingr_recipes = eval(main_ingredient_map.iloc[ingr_ind]["Recipe IDs"])
 
-            #maybe there's a better way to do this
-            max_missing_ingredients = ceil(len(recipe_ingredients) / 4) #total recipe ingredients / 4 rounded up 
-            missing_ingredients = get_num_missing_ingredients(recipe, list_of_ingr)
-            if(missing_ingredients <= max_missing_ingredients):
-                candidates[recipe] = missing_ingredients #duplicate recipes won't appear twice in the dictionary 
+            for recipe in ingr_recipes:
 
+                main_ingr_count = 0
+                r_main_ingr = get_main_ingr(map_recipe_id_name(recipe))
+                for i in r_main_ingr:
+                    if i in set(list_of_ingr):
+                        main_ingr_count += 1
+                if main_ingr_count == len(r_main_ingr):
+                    print(172)
+                    recipe_ingredients = get_ingredients(recipe)
+                    #recipe_ingredients = [4308, 1910, 1168, 1, 2]
 
-    ingr = -1 #deal with all recipes without a main ingredient 
-    all_ingr_ids = raw_recipes_df['Main Ingredient IDs'].toList()
-    ingr_ind = all_ingr_ids.index(ingr)
-    ingr_row = main_ingredient_map.iloc[ingr_ind]
-    ingr_recipes = json.loads(ingr_row["Recipe IDs"])
-    for recipe in ingr_recipes:
-        recipe_ingredients = get_ingredients(recipe)
+                    #maybe there's a better way to do this
+                    # max_missing_ingredients = ceil(len(recipe_ingredients) / 4) #total recipe ingredients / 4 rounded up 
+                    # missing_ingredients = get_num_missing_ingredients(recipe, list_of_ingr)
+                    # if(missing_ingredients <= max_missing_ingredients):
+                    #     print("ADDED")
+                    #     candidates[recipe] = missing_ingredients #duplicate recipes won't appear twice in the dictionary 
+                    candidates[recipe] = "a"
+    print("checkpoint!")
 
-        max_missing_ingredients = ceil(len(recipe_ingredients) / 4) 
-        missing_ingredients = get_num_missing_ingredients(recipe, list_of_ingr)
-        if(missing_ingredients <= max_missing_ingredients):
-            candidates[recipe] = missing_ingredients 
-    return candidates
+    #order by ratings:
+    recipe_candidates = list(candidates.keys())
+    recipe_candidates = order_ratings(recipe_candidates)
+    ordered_candidates = {}
+    for recipe in recipe_candidates:
+        ordered_candidates[recipe] = candidates[recipe]
+    return ordered_candidates
 
-ingredients = [4308, 1910, 1168]
-print(find_candidates(ingredients))
+    
+ingredients = ["cream cheese", "chicken", "lettuce", "eggs", "milk", "butter", "bacon", "fresh chive", "white vinegar", "cheddar", "sour cream", "paprika"]
+ingredients_ids = get_ingr_ids(ingredients)
+print(find_candidates(ingredients_ids))
