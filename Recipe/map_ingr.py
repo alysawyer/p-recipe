@@ -65,7 +65,7 @@ def order_ratings(recipe_pool):
         total_r, avg_r = get_avg_rating(id)
         recipe_pool_dict[id] = total_r*avg_r
 
-    recipe_pool_ordered = sorted(recipe_pool_dict, key=recipe_pool_dict.get, reverse=True)
+    recipe_pool_ordered = {key: val for key, val in sorted(recipe_pool_dict.items(), key=lambda item: item[1], reverse=True)}
 
     #We may want to add something here to only return part of the ordered pool of recipes!
     return recipe_pool_ordered
@@ -112,7 +112,7 @@ def get_ingredients(recipe_id):
     recipe_row = recipe_df.iloc[recipe_ind]
     ingredients = recipe_row["ingredient_ids"]
     #print(ingredients)
-    return ingredients
+    return eval(ingredients)
 
 
 
@@ -123,11 +123,15 @@ def get_num_missing_ingredients(recipe_id, list_of_ingr):
     Returns number of ingredients missing from recipe's ingredients"""
 
     recipe_ingredients = get_ingredients(recipe_id)
+    r_main_ingr = get_main_ingr(recipe_id)
     #recipe_ingredients = [4308, 1910, 1168, 1, 2]
     counter = 0
     for id in recipe_ingredients:
         if id not in list_of_ingr:
-            counter += 1
+            if id in r_main_ingr:
+                counter += 1
+            else:
+                counter += 0.25
     return counter 
 
 main_ingredient_map = pd.read_csv('map_main_ingredients.csv')
@@ -137,9 +141,9 @@ def get_main_ingr(recipe_id):
     all_ingr = main_ingredient_map['Main Ingredient IDs'].tolist()
     ingredientL = []
     for i in range(len(all_recipes)):
-        if recipe_id in all_recipes[i]:
+        if recipe_id in eval(all_recipes[i]):
             ingredientL.append(all_ingr[i])
-    print(ingredientL)
+    #print(ingredientL)
     return ingredientL
 
 
@@ -156,41 +160,45 @@ def find_candidates(list_of_ingr):
     for ingr in list_of_ingr: 
         if ingr in all_ingr_ids:
             ingr_ind = all_ingr_ids.index(ingr)
-            #ingr_row = main_ingredient_map.iloc[ingr_ind]
-            #ingr_recipes = json.loads(ingr_row["Recipe IDs"])
 
             ingr_recipes = eval(main_ingredient_map.iloc[ingr_ind]["Recipe IDs"])
 
             for recipe in ingr_recipes:
 
-                main_ingr_count = 0
-                r_main_ingr = get_main_ingr(map_recipe_id_name(recipe))
-                for i in r_main_ingr:
-                    if i in set(list_of_ingr):
-                        main_ingr_count += 1
-                if main_ingr_count == len(r_main_ingr):
-                    print(172)
-                    recipe_ingredients = get_ingredients(recipe)
-                    #recipe_ingredients = [4308, 1910, 1168, 1, 2]
+                #main_ingr_count = 0
+                #r_main_ingr = get_main_ingr(map_recipe_id_name(recipe))
+                # for i in r_main_ingr:
+                #     if i in set(list_of_ingr):
+                #         main_ingr_count += 1
+                # if main_ingr_count == len(r_main_ingr):
+                #     print(172)
+                recipe_ingredients = get_ingredients(recipe)
+                
+                #recipe_ingredients = [4308, 1910, 1168, 1, 2]
 
-                    #maybe there's a better way to do this
-                    # max_missing_ingredients = ceil(len(recipe_ingredients) / 4) #total recipe ingredients / 4 rounded up 
-                    # missing_ingredients = get_num_missing_ingredients(recipe, list_of_ingr)
-                    # if(missing_ingredients <= max_missing_ingredients):
-                    #     print("ADDED")
-                    #     candidates[recipe] = missing_ingredients #duplicate recipes won't appear twice in the dictionary 
-                    candidates[recipe] = "a"
-    print("checkpoint!")
+                #maybe there's a better way to do this
+                
+                missing_ingredients = get_num_missing_ingredients(recipe, list_of_ingr)
+                portion_missing = missing_ingredients/len(recipe_ingredients)
+                candidates[recipe] = portion_missing * 100 #duplicate recipes won't appear twice in the dictionary 
+                    
+    #print("checkpoint!")
+
+    #filter out too many missing ingr:
+    candidates = {key: val for key, val in sorted(candidates.items(), key=lambda item: item[1])}
+    print(candidates)
+    recipe_candidates = list(candidates.keys())
+    twenty_perc_mark = int(len(recipe_candidates)*0.2)
+    short_list = recipe_candidates[:twenty_perc_mark]
 
     #order by ratings:
-    recipe_candidates = list(candidates.keys())
-    recipe_candidates = order_ratings(recipe_candidates)
+    short_list = order_ratings(short_list)
     ordered_candidates = {}
-    for recipe in recipe_candidates:
+    for recipe in short_list:
         ordered_candidates[recipe] = candidates[recipe]
     return ordered_candidates
 
     
 ingredients = ["cream cheese", "chicken", "lettuce", "eggs", "milk", "butter", "bacon", "fresh chive", "white vinegar", "cheddar", "sour cream", "paprika"]
-ingredients_ids = get_ingr_ids(ingredients)
-print(find_candidates(ingredients_ids))
+#ingredients_ids = get_ingr_ids(ingredients)
+#print(find_candidates(ingredients_ids))
