@@ -53,14 +53,15 @@ T.ToPILImage()(white_torch)
 
 # This is the original image
 from PIL import Image
-im = Image.open(r"/Users/jacksusank/Downloads/Food_Item_Detection.v1i.yolov7pytorch/train/images/001_png_jpg.rf.07d04531a296b96d3ffad3db54a54866.jpg")
+# old   im = Image.open(r"/Users/jacksusank/Downloads/P-ai/fridge_data/Food_Item_Detection.v1i.yolov7pytorch/train/images/001_png_jpg.rf.07d04531a296b96d3ffad3db54a54866.jpg")
+im = Image.open(r"/Users/jacksusank/Downloads/p-ai/fridge_data/SmarterChef.v5i.yolov7pytorch/train/images/asparagus_jpg.rf.8b91337853f5dd660fff7bf6c9e058b9.jpg")
 width, height = im.size
 
 
 # From Chat GPT
 
-label_file_path = "/Users/jacksusank/Downloads/Food_Item_Detection.v1i.yolov7pytorch/train/labels/001_png_jpg.rf.07d04531a296b96d3ffad3db54a54866.txt"  # Replace with the path to your YOLO label file
-
+# old  label_file_path = "/Users/jacksusank/Downloads/P-ai/fridge_data/Food_Item_Detection.v1i.yolov7pytorch/train/labels/001_png_jpg.rf.07d04531a296b96d3ffad3db54a54866.txt"  # Replace with the path to your YOLO label file
+label_file_path = "/Users/jacksusank/Downloads/p-ai/fridge_data/SmarterChef.v5i.yolov7pytorch/train/labels/asparagus_jpg.rf.8b91337853f5dd660fff7bf6c9e058b9.txt"
 
 with open(label_file_path, 'r') as file:
     lines = file.readlines()
@@ -80,7 +81,8 @@ top_multiplier_list = []
 bottom_multiplier_list = []
 
 # This is a list of all the possible types of labels.
-names = ["Apple", 'Banana', 'Beans', 'Capsicum', 'Carrot', 'Cucumber', 'Curli-Flower', 'Orange', 'Tomato', 'Tomatos', 'apple', 'asparagus', 'avocado', 'banana', 'beef', 'bell_pepper', 'bento', 'blueberries', 'bottle', 'bread', 'broccoli', 'butter', 'can', 'carrot', 'cauliflower', 'cheese', 'chicken', 'chicken_breast', 'chocolate', 'coffee', 'corn', 'cucumber', 'egg', 'eggs', 'energy_drink', 'fish', 'flour', 'garlic', 'goat_cheese', 'grapes', 'grated_cheese', 'green_beans', 'ground_beef', 'guacamole', 'ham', 'heavy_cream', 'humus', 'juice', 'ketchup', 'kothmari', 'leek', 'lemon', 'lettuce', 'lime', 'mango', 'marmelade', 'mayonaise', 'milk', 'mushrooms', 'mustard', 'nuts', 'onion', 'orange', 'pak_choi', 'parsley', 'peach', 'pear', 'pineapple', 'plasticsaveholder', 'pot', 'potato', 'potatoes', 'pudding', 'red_cabbage', 'red_grapes', 'rice_ball', 'salad', 'sandwich', 'sausage', 'shrimp', 'smoothie', 'spinach', 'spring_onion', 'strawberries', 'sugar', 'sweet_potato', 'tea_a', 'tea_i', 'tomato', 'tomato_sauce', 'tortillas', 'turkey', 'watermelon', 'yogurt']
+# old   names = ["Apple", 'Banana', 'Beans', 'Capsicum', 'Carrot', 'Cucumber', 'Curli-Flower', 'Orange', 'Tomato', 'Tomatos', 'apple', 'asparagus', 'avocado', 'banana', 'beef', 'bell_pepper', 'bento', 'blueberries', 'bottle', 'bread', 'broccoli', 'butter', 'can', 'carrot', 'cauliflower', 'cheese', 'chicken', 'chicken_breast', 'chocolate', 'coffee', 'corn', 'cucumber', 'egg', 'eggs', 'energy_drink', 'fish', 'flour', 'garlic', 'goat_cheese', 'grapes', 'grated_cheese', 'green_beans', 'ground_beef', 'guacamole', 'ham', 'heavy_cream', 'humus', 'juice', 'ketchup', 'kothmari', 'leek', 'lemon', 'lettuce', 'lime', 'mango', 'marmelade', 'mayonaise', 'milk', 'mushrooms', 'mustard', 'nuts', 'onion', 'orange', 'pak_choi', 'parsley', 'peach', 'pear', 'pineapple', 'plasticsaveholder', 'pot', 'potato', 'potatoes', 'pudding', 'red_cabbage', 'red_grapes', 'rice_ball', 'salad', 'sandwich', 'sausage', 'shrimp', 'smoothie', 'spinach', 'spring_onion', 'strawberries', 'sugar', 'sweet_potato', 'tea_a', 'tea_i', 'tomato', 'tomato_sauce', 'tortillas', 'turkey', 'watermelon', 'yogurt']
+names = ["Lemon", 'Onion', 'Orange', 'Peas', 'Potato', 'Strawberry', 'Tomato', 'apples', 'aubergine', 'bananas', 'blueberries', 'bread', 'broccoli', 'butter', 'carrots', 'cheese', 'chicken', 'courgettes', 'eggs', 'ginger', 'green beans', 'green chilies', 'ham', 'lemon', 'lettuce', 'lime', 'milk', 'mushrooms', 'onion', 'orange', 'peach', 'peppers', 'potatoes', 'red onion', 'spinach', 'spring onion', 'strawberries', 'sweet_potato', 'tomatoes', 'yoghurt']
 
 
 for line in lines:
@@ -149,7 +151,7 @@ for line in lines:
 plt.title("Food Image")
 plt.xlabel("X pixel scaling")
 plt.ylabel("Y pixels scaling")
-image = mpimg.imread("/Users/jacksusank/Downloads/Food_Item_Detection.v1i.yolov7pytorch/train/images/001_png_jpg.rf.07d04531a296b96d3ffad3db54a54866.jpg")
+image = mpimg.imread("/Users/jacksusank/Downloads/P-ai/fridge_data/Food_Item_Detection.v1i.yolov7pytorch/train/images/001_png_jpg.rf.07d04531a296b96d3ffad3db54a54866.jpg")
 # plt.imshow(image)
 # plt.show()
 
