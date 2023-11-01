@@ -68,6 +68,7 @@ new_image_file_path = "/Users/jacksusank/Downloads/p-ai/fridge_data/SmarterChef.
 # old   names = ["Apple", 'Banana', 'Beans', 'Capsicum', 'Carrot', 'Cucumber', 'Curli-Flower', 'Orange', 'Tomato', 'Tomatos', 'apple', 'asparagus', 'avocado', 'banana', 'beef', 'bell_pepper', 'bento', 'blueberries', 'bottle', 'bread', 'broccoli', 'butter', 'can', 'carrot', 'cauliflower', 'cheese', 'chicken', 'chicken_breast', 'chocolate', 'coffee', 'corn', 'cucumber', 'egg', 'eggs', 'energy_drink', 'fish', 'flour', 'garlic', 'goat_cheese', 'grapes', 'grated_cheese', 'green_beans', 'ground_beef', 'guacamole', 'ham', 'heavy_cream', 'humus', 'juice', 'ketchup', 'kothmari', 'leek', 'lemon', 'lettuce', 'lime', 'mango', 'marmelade', 'mayonaise', 'milk', 'mushrooms', 'mustard', 'nuts', 'onion', 'orange', 'pak_choi', 'parsley', 'peach', 'pear', 'pineapple', 'plasticsaveholder', 'pot', 'potato', 'potatoes', 'pudding', 'red_cabbage', 'red_grapes', 'rice_ball', 'salad', 'sandwich', 'sausage', 'shrimp', 'smoothie', 'spinach', 'spring_onion', 'strawberries', 'sugar', 'sweet_potato', 'tea_a', 'tea_i', 'tomato', 'tomato_sauce', 'tortillas', 'turkey', 'watermelon', 'yogurt']
 names = ["Lemon", 'Onion', 'Orange', 'Peas', 'Potato', 'Strawberry', 'Tomato', 'apples', 'aubergine', 'bananas', 'blueberries', 'bread', 'broccoli', 'butter', 'carrots', 'cheese', 'chicken', 'courgettes', 'eggs', 'ginger', 'green beans', 'green chilies', 'ham', 'lemon', 'lettuce', 'lime', 'milk', 'mushrooms', 'onion', 'orange', 'peach', 'peppers', 'potatoes', 'red onion', 'spinach', 'spring onion', 'strawberries', 'sweet_potato', 'tomatoes', 'yoghurt']
 
+
 def show_labels(label_file_path, image_file_path, category_values_list):
     """ This function takes the locations of an image and its corresponding label file and it shows cropped versions of the image that only show the labels.
     label_file_path: (String) This paramater is the pathname of the label file that corresponds to the image.
@@ -151,30 +152,46 @@ show_labels(new_label_file_path, new_image_file_path, names)
 
 
 #Cheese plate folder path
-my_folder_path = "/Users/jacksusank/Downloads/p-ai/fridge_data/food_data_set_training/processed_data/test/cheese_plate"
+my_folder_path = "/Users/jacksusank/Downloads/p-ai/fridge_data/SmarterChef.v5i.yolov7pytorch/train"
 
-def process_folder(folder_path):
-    # Iterate through subfolders
+
+# Define a function you want to apply to each file
+images_pathname_list = []
+labels_pathname_list = []
+
+def make_cropped_pictures_folder(folder_path):
     for subfolder in os.listdir(folder_path):
         subfolder_path = os.path.join(folder_path, subfolder)
-        if os.path.isdir(subfolder_path):
-            # If it's a subfolder, call the function recursively
-            process_folder(subfolder_path)
-        else:
-            
+        if subfolder_path == "/Users/jacksusank/Downloads/p-ai/fridge_data/SmarterChef.v5i.yolov7pytorch/train/images":
+            num = 0
+            for filename in os.listdir(folder_path):
+                num += 1
+                # Construct the full file path
+                images_file_path = os.path.join(folder_path, filename)
+                images_pathname_list.append(images_file_path)
+        elif subfolder_path == "/Users/jacksusank/Downloads/p-ai/fridge_data/SmarterChef.v5i.yolov7pytorch/train/labels":
+            num = 0
+            for filename in os.listdir(folder_path):
+                num += 1
+                # Construct the full file path
+                labels_file_path = os.path.join(folder_path, filename)
+                labels_pathname_list.append(labels_file_path)
+    for i in range(len(10)):
+        try:
+            with Image.open(images_pathname_list[i]) as img:
+                # Image was successfully opened, you can work with it here
+                show_labels(images_pathname_list[i], labels_pathname_list[i], names)
+        except:
+            # Handle the case where the file is not a valid image
+
+            print(f"The file at '{images_pathname_list[i]}' is not a valid image file.")
 
 
 
 
-    for filename in os.listdir(folder_path):
-        # Construct the full file path
-        file_path = os.path.join(folder_path, filename)
 
-        # Check if it's a file (not a subdirectory)
-        if os.path.isfile(file_path):
-            # Apply your function to the file
-            process_file(file_path)
-            def show_labels(label_file_path, image_file_path, category_values_list):
+
+
 
 
 
