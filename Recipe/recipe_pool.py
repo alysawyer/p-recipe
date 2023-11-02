@@ -76,6 +76,85 @@ def order_ratings(recipe_pool):
     #We may want to add something here to only return part of the ordered pool of recipes!
     return recipe_pool_D
 
+def limit_time(recipe_pool, max_minutes):
+    """Given a dictionary of recipe IDs in our pool and a time limit in mimutes,
+        return  the pool without recipes that exceed the max time"""
+    all_recipe_ids = raw_recipes_df['id'].tolist()
+
+    filtered_recipes = {}
+
+    for id, score in recipe_pool.items():
+        recipe_ind = all_recipe_ids.index(id)
+        time = raw_recipes_df.iloc[recipe_ind]['minutes']
+        if(time <= max_minutes):
+            filtered_recipes[id] = score
+
+    return filtered_recipes
+
+def order_times(recipe_pool):
+    """Given a dictionary of recipe IDs in our pool, 
+        return an ordered list of recipe ids (lowest -> highest time to make)"""
+    recipe_pool_times = {}
+    all_recipe_ids = raw_recipes_df['id'].tolist()
+
+    for id in recipe_pool:
+        recipe_ind = all_recipe_ids.index(id)
+        recipe_pool_times[id] = raw_recipes_df.iloc[recipe_ind]['minutes']
+    recipe_pool_times = {key: value for key, value in sorted(recipe_pool_times.items(), key=lambda item: item[1], reverse=False)}
+    
+    sorted_keys = list(recipe_pool_times.keys())
+    recipe_pool_D = {id: recipe_pool[id] for id in sorted_keys}
+    return recipe_pool_D
+
+def order_times(recipe_pool):
+    """Given a dictionary of recipe IDs in our pool, 
+        return an ordered list of recipe ids (lowest -> highest time to make)"""
+    recipe_pool_times = {}
+    all_recipe_ids = raw_recipes_df['id'].tolist()
+
+    for id in recipe_pool:
+        recipe_ind = all_recipe_ids.index(id)
+        recipe_pool_times[id] = raw_recipes_df.iloc[recipe_ind]['minutes']
+    recipe_pool_times = {key: value for key, value in sorted(recipe_pool_times.items(), key=lambda item: item[1], reverse=False)}
+    
+    sorted_keys = list(recipe_pool_times.keys())
+    recipe_pool_D = {id: recipe_pool[id] for id in sorted_keys}
+    return recipe_pool_D
+
+def order_fats(recipe_pool):
+    """Given a dictionary of recipe IDs in our pool, 
+        return an ordered list of recipe ids (lowest -> highest total fat)"""
+    recipe_pool_fats = {}
+    all_recipe_ids = raw_recipes_df['id'].tolist()
+
+    for id in recipe_pool:
+        recipe_ind = all_recipe_ids.index(id)
+        recipe_nutrition = eval(raw_recipes_df.iloc[recipe_ind]['nutrition'])
+        recipe_pool_fats[id] = recipe_nutrition[1]
+        #print(map_recipe_id_name(id), " ", recipe_nutrition[1])
+    recipe_pool_fats = {key: value for key, value in sorted(recipe_pool_fats.items(), key=lambda item: item[1], reverse=False)}
+    
+    sorted_keys = list(recipe_pool_fats.keys())
+    recipe_pool_D = {id: recipe_pool[id] for id in sorted_keys}
+    return recipe_pool_D
+
+def order_sugars(recipe_pool):
+    """Given a dictionary of recipe IDs in our pool, 
+        return an ordered list of recipe ids (lowest -> highest total amount of sugar)"""
+    recipe_pool_sugars = {}
+    all_recipe_ids = raw_recipes_df['id'].tolist()
+
+    for id in recipe_pool:
+        recipe_ind = all_recipe_ids.index(id)
+        recipe_nutrition = eval(raw_recipes_df.iloc[recipe_ind]['nutrition'])
+        recipe_pool_sugars[id] = recipe_nutrition[2]
+    recipe_pool_sugars = {key: value for key, value in sorted(recipe_pool_sugars.items(), key=lambda item: item[1], reverse=False)}
+    
+    sorted_keys = list(recipe_pool_sugars.keys())
+    recipe_pool_D = {id: recipe_pool[id] for id in sorted_keys}
+    return recipe_pool_D
+
+
 def display_recipe(recipe_pool):
     """Given recipe_pool (a dictionary of recipe IDs:score in our final pool)
     Display/Print 5 recipes for the user"""
@@ -230,10 +309,11 @@ def main(ingredients):
     ingr_ids = get_ingr_ids(ingredients)
     recipe_pool = get_recipe_pool(ingr_ids)
     filtered_pool = filter_pool(recipe_pool)
+    #filtered_pool = limit_time(filtered_pool, 20)
     ordered_by_rating_pool = order_ratings(filtered_pool)
     display_recipe(ordered_by_rating_pool)
 
 
     
 ingredients = ["cream cheese", "chicken", "lettuce", "eggs", "milk", "butter", "bacon", "fresh chive", "white vinegar", "cheddar", "sour cream", "paprika"]
-#print(find_candidates(ingredients_ids))
+main(ingredients)
