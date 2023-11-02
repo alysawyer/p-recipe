@@ -1,5 +1,5 @@
 #import the pandas library
-import json
+
 from math import ceil
 import pandas as pd
 
@@ -155,7 +155,8 @@ def order_sugars(recipe_pool):
     return recipe_pool_D
 
 
-def display_recipe(recipe_pool):
+
+def display_recipe(recipe_pool,subs_needed):
     """Given recipe_pool (a dictionary of recipe IDs:score in our final pool)
     Display/Print 5 recipes for the user"""
     all_recipe_ids = raw_recipes_df['id'].tolist()
@@ -173,11 +174,19 @@ def display_recipe(recipe_pool):
         ingredients = recipe_row["ingredients"]
         description = recipe_row["description"]
         instruction = eval(recipe_row['steps'])
+        subs_used = subs_needed[recipe_id]
+        using_subs = True
+        if subs_needed[recipe_id] == {}:
+            using_subs = False
 
         print(f'Recipe #{recipe_counter}')
+        print()
         #print recipe title
         print(recipe_title)
         print(f"MISSING {num_missing} INGREDIENTS")
+        print(f"Using SUBSTITUES: {using_subs}")
+        for key, value in subs_used.items():
+            print(f"- Use {value} instead of {key}")
         #print ratings, number of ratings
         print(rating_str)
         # print time estimate
@@ -190,7 +199,6 @@ def display_recipe(recipe_pool):
             print(i, instruction[i])
         print()
         recipe_counter += 1
-
 
 def get_ingredients(recipe_id):
     """given a recipe id, get its ingredients
@@ -219,10 +227,48 @@ def get_num_missing_ingredients(recipe_id, list_of_ingr):
     return counter 
 
 recipe_map = pd.read_csv('recipe_main_ingr_map.csv')
+sub_map = pd.read_csv('ingr_subs.csv')
+# subs_needed_dict tracks subs needed for each recipe:
+        # {recipe id: {ingr: sub}}
+
+def get_sub(l_ingr_ids, missing_ingr):
+    """given a list of ingr ids and a missing ingr id, return a working sub if one exists"""
+    all_subs = sub_map['ingr_id'].tolist() #a list of all ingr that have subs
+    if missing_ingr in all_subs:
+        sub_index = all_subs.index(missing_ingr)
+        sub_opts = eval(sub_map.iloc[sub_index]['substitutions'])
+        for sub_set in sub_opts:
+            count_missing = 0
+            for ingr in sub_set:
+                if ingr not in l_ingr_ids:
+                    count_missing += 1
+            if count_missing == 0:
+                return (missing_ingr, sub_set)
+    return (missing_ingr, []) #we couldn't find a working sub
+
+def working_sub_exists(l_ingr_ids, missing_ingr):
+    """given a list of ingr ids and a missing ingredient's id, determine if a substitute is available, and if we can use it with our ingredients
+    If we can use a sub: return (True, missing ingr, sub); otherwise (False, missing ingr, [])"""
+    all_subs = sub_map['ingr_id'].tolist() #a list of all ingr that have subs
+    if missing_ingr in all_subs:
+        sub_index = all_subs.index(missing_ingr)
+        sub_opts = eval(sub_map.iloc[sub_index]['substitutions'])
+        for sub_set in sub_opts:
+            count_missing = 0
+            for ingr in sub_set:
+                if ingr not in l_ingr_ids:
+                    count_missing += 1
+            if count_missing == 0:
+                return (True, missing_ingr, sub_set)
+    return (False, missing_ingr, []) #we couldn't find a working sub
+
+
+
 
 def get_recipe_pool(l_ingr_ids):
-    
+    subs_needed_dict = {}
     recipe_pool = {}
+    
     # {recipe id: score}
     #score = #produce missing + # dairy missing + # other missing
     # only allow to be added to pool if zero protein missing, <=2 produce missing, <= 2 dairy missing, <= 6 other missing
@@ -234,44 +280,67 @@ def get_recipe_pool(l_ingr_ids):
         recipe_produce = recipe_ingr[1]
         recipe_dairy = recipe_ingr[2]
         recipe_other = recipe_ingr[3]
+        recipe_id = recipe_map.iloc[recipe_ind]['recipe_id']
+
+        #track which subs we will need to use if recipe stays:
+        subs_for_recipe = {}
 
         #protein:
         should_include = True
         for prot in recipe_protein:
             if prot not in l_ingr_ids:
-                should_include = False
-                break
+                subs = working_sub_exists(l_ingr_ids, prot)
+                if not subs[0]:
+                    should_include = False
+                    break
+                else:
+                    subs_for_recipe[prot] = subs[2]
+                
+                    
         if should_include:
             num_prod_miss = 0
             should_inc_prod = True
             for prod in recipe_produce:
                 if prod not in l_ingr_ids:
-                    num_prod_miss += 1
-                    if num_prod_miss > 1:
-                        should_inc_prod = False
-                        break
+                    subs = working_sub_exists(l_ingr_ids, prod)
+                    if not subs[0]:
+                        num_prod_miss += 1
+                        if num_prod_miss > 1:
+                            should_inc_prod = False
+                            break
+                    else:
+                        subs_for_recipe[prod] = subs[2]
             if should_inc_prod:
                 num_dairy_miss = 0
                 should_inc_dairy = True
                 for dairy in recipe_dairy:
                     if dairy not in l_ingr_ids:
-                        num_dairy_miss += 1
-                        if num_dairy_miss > 1:
-                            should_inc_dairy = False
-                            break
+                        subs = working_sub_exists(l_ingr_ids, dairy)
+                        if not subs[0]:
+                            num_dairy_miss += 1
+                            if num_dairy_miss > 1:
+                                should_inc_dairy = False
+                                break
+                        else:
+                            subs_for_recipe[dairy] = subs[2]
                 if should_inc_dairy:
                     num_other_miss = 0
                     should_inc_o = True
                     for other in recipe_other:
                         if other not in l_ingr_ids:
-                            num_other_miss += 1
-                            if num_other_miss > 5:
-                                should_inc_o = False
-                                break
+                            subs = working_sub_exists(l_ingr_ids, other)
+                            if not subs[0]:
+                                num_other_miss += 1
+                                if num_other_miss > 5:
+                                    should_inc_o = False
+                                    break
+                            else:
+                                subs_for_recipe[other] = subs[2]
                     if should_inc_o:
                         score = num_other_miss + num_dairy_miss + num_prod_miss
-                        recipe_pool[recipe_map.iloc[recipe_ind]['recipe_id']] = score
-    return recipe_pool
+                        recipe_pool[recipe_id] = score
+                        subs_needed_dict[recipe_id] = subs_for_recipe
+    return recipe_pool, subs_needed_dict #return the reecipe pool, and the subs that would be used for the recipes
 
 def filter_pool(recipe_pool):
     #score goes from 0-10
@@ -307,11 +376,10 @@ def filter_pool(recipe_pool):
 
 def main(ingredients):
     ingr_ids = get_ingr_ids(ingredients)
-    recipe_pool = get_recipe_pool(ingr_ids)
+    recipe_pool, subs_needed = get_recipe_pool(ingr_ids)
     filtered_pool = filter_pool(recipe_pool)
-    #filtered_pool = limit_time(filtered_pool, 20)
     ordered_by_rating_pool = order_ratings(filtered_pool)
-    display_recipe(ordered_by_rating_pool)
+    display_recipe(ordered_by_rating_pool, subs_needed)
 
 
     
