@@ -75,8 +75,13 @@ def show_labels(label_file_path, image_file_path, category_values_list, image_nu
     image_file_path: (String) This parameter is the pathname of the image file that we will be cropping.
     category_values_list: (List of strings) This parameter is a list which contains all of the possible names of the labels in the same order that they were encoded by the dataset's creator.
     """
+    print("HEEEEEEEEEERRRRRRRRRRREEEEEEEEEE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    print(label_file_path)
+    print(image_file_path)
+    print(image_number)
+    print("HEEEEEEEEEERRRRRRRRRRREEEEEEEEEE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
-    im = Image.open(new_image_file_path) # I had to comment out the "r" for read file here because it was giving me errors.
+    im = Image.open(image_file_path) # I had to comment out the "r" for read file here because it was giving me errors.
     width, height = im.size
     try: 
         with open(label_file_path, 'r') as file:
@@ -96,9 +101,13 @@ def show_labels(label_file_path, image_file_path, category_values_list, image_nu
         top_multiplier_list = []
         bottom_multiplier_list = []
 
+        item_number = 0
 
         for line in lines:
+            item_number += 1
             parts = line.strip().split()  # Split the line into parts
+
+
 
             # These are the characteristics of each of the labels
             class_id = int(parts[0])
@@ -146,9 +155,9 @@ def show_labels(label_file_path, image_file_path, category_values_list, image_nu
             # These lines display the items that are labeled!
             try:
                 im1 = im.crop((left_bound, top_bound, right_bound, bottom_bound))
-                # im1.show()
+                #im1.show()
                 print("right before save")
-                im1.save("/Users/jacksusank/Downloads/p-ai/fridge_data/Our_Data/" + str(category_values_list[class_id]) + "/" + str(category_values_list[class_id]) + str(image_number) + ".jpg")
+                im1.save("/Users/jacksusank/Downloads/p-ai/fridge_data/Our_Data/" + str(category_values_list[class_id]) + "/" + str(category_values_list[class_id]) + str(image_number) +"." + str(item_number) + ".jpg")
                 print("right after save")
             except: 
                 print(f"The file at '{images_pathname_list[i]}' is not a valid image file.")
@@ -157,7 +166,6 @@ def show_labels(label_file_path, image_file_path, category_values_list, image_nu
 
 
 # show_labels(new_label_file_path, new_image_file_path, names)
-
 
 #Cheese plate folder path
 my_folder_path = "/Users/jacksusank/Downloads/p-ai/fridge_data/SmarterChef.v5i.yolov7pytorch/train"
@@ -168,6 +176,50 @@ print("spot 1")
 images_pathname_list = []
 labels_pathname_list = []
 
+
+
+
+
+
+
+
+
+
+# New one:
+def new_make_cropped_pictures_folder(folder_path):
+    pathname_list = []
+    images_folder_path = folder_path + "/images"
+    labels_folder_path = folder_path + "/labels"
+
+    images_path_list = sorted(os.listdir(images_folder_path))
+    labels_path_list = sorted(os.listdir(labels_folder_path))
+    #for i in range(len(os.listdir(images_folder_path))):
+    for i in range(len(images_path_list)):
+
+        print(str(images_path_list[i])[0:-3])
+        print(str(labels_path_list[i])[0:-3])
+        if images_path_list[i][0:(-3)] == labels_path_list[i][0:(-3)]:
+        # if os.listdir(folder_path)[1][i][0:(-3)] == os.listdir(folder_path)[2][i][0:(-3)]:
+
+            image_path = (images_folder_path + "/" + images_path_list[i])
+            label_path = (labels_folder_path + "/" + labels_path_list[i])
+
+            pathname_list.append((image_path, label_path, i))
+    
+    for i in range(100):
+        print(pathname_list[i][0])
+        print(pathname_list[i][1])
+        print(pathname_list[i][2])
+        show_labels(pathname_list[i][1], pathname_list[i][0], names, pathname_list[i][2])
+
+
+
+
+
+
+
+
+# I think this one is broken!
 def make_cropped_pictures_folder(folder_path):
     for subfolder in os.listdir(folder_path):
         subfolder_path = (folder_path + "/" + subfolder)
@@ -190,13 +242,18 @@ def make_cropped_pictures_folder(folder_path):
                     print(labels_file_path_and_num[0])
                     labels_pathname_list.append(labels_file_path_and_num)
             else:
-                raise ("Wrong File!")
-    for i in range(10):
+                raise ("Wrong File!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    for i in range(1):
+        print(labels_pathname_list[i][0])
+        print(images_pathname_list[i])
         #Image.open(images_pathname_list[i]) as img:
         show_labels(labels_pathname_list[i][0], images_pathname_list[i], names, labels_pathname_list[i][1])
 
  
-make_cropped_pictures_folder("/Users/jacksusank/Downloads/p-ai/fridge_data/SmarterChef.v5i.yolov7pytorch/train")
+
+
+ 
+new_make_cropped_pictures_folder("/Users/jacksusank/Downloads/p-ai/fridge_data/SmarterChef.v5i.yolov7pytorch/train")
 
 
 print("spot 2")
