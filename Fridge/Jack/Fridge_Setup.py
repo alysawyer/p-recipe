@@ -160,7 +160,7 @@ def show_labels(label_file_path, image_file_path, category_values_list, image_nu
                 im1.save("/Users/jacksusank/Downloads/p-ai/fridge_data/Our_Data/" + str(category_values_list[class_id]) + "/" + str(category_values_list[class_id]) + str(image_number) +"." + str(item_number) + ".jpg")
                 print("right after save")
             except: 
-                print(f"The file at '{images_pathname_list[i]}' is not a valid image file.")
+                print(f"The file at '{image_file_path}' is not a valid image file.")
     except: 
         print("Can't read file lines of " + label_file_path)
 
@@ -206,7 +206,7 @@ def new_make_cropped_pictures_folder(folder_path):
 
             pathname_list.append((image_path, label_path, i))
     
-    for i in range(100):
+    for i in range(len(pathname_list)):
         print(pathname_list[i][0])
         print(pathname_list[i][1])
         print(pathname_list[i][2])
@@ -252,8 +252,8 @@ def make_cropped_pictures_folder(folder_path):
  
 
 
- 
-new_make_cropped_pictures_folder("/Users/jacksusank/Downloads/p-ai/fridge_data/SmarterChef.v5i.yolov7pytorch/train")
+
+# new_make_cropped_pictures_folder("/Users/jacksusank/Downloads/p-ai/fridge_data/SmarterChef.v5i.yolov7pytorch/train")
 
 
 print("spot 2")
@@ -289,8 +289,8 @@ image = mpimg.imread("/Users/jacksusank/Downloads/P-ai/fridge_data/Food_Item_Det
 
 
 
-# Working with the model! Resnet 50
-model = models.resnet50(pretrained=True)
+# Working with the model! Resnet 18
+model = models.resnet18(pretrained=True)
 model
 # print(model)
 
@@ -298,7 +298,7 @@ num_features = model.fc.in_features
 print('Number of features from pre-trained model', num_features)
 
 
-model.fc = nn.Linear(num_features, 101)
+model.fc = nn.Linear(num_features, 40)
 model = model.to(device)
 
 requires_grad=False
@@ -308,8 +308,12 @@ print("spot 3")
 # Setting up the datasets
 # train_dir = "/Users/jacksusank/Downloads/p-ai/fridge_data/Food_Item_Detection.v1i.yolov7pytorch/train/images"
 # test_dir = "/Users/jacksusank/Downloads/p-ai/fridge_data/Food_Item_Detection.v1i.yolov7pytorch/test/images" 
-train_dir = "/Users/jacksusank/Downloads/p-ai/fridge_data/food_data_set_training/processed_data/train"
-test_dir = "/Users/jacksusank/Downloads/p-ai/fridge_data/food_data_set_training/processed_data/test"
+# train_dir = "/Users/jacksusank/Downloads/p-ai/fridge_data/food_data_set_training/processed_data/train"
+# test_dir = "/Users/jacksusank/Downloads/p-ai/fridge_data/food_data_set_training/processed_data/test"
+
+
+train_dir = "/Users/jacksusank/Downloads/p-ai/fridge_data/Our_Data"
+test_dir = "/Users/jacksusank/Downloads/p-ai/fridge_data/Our_Data"
 
 transforms_train = transforms.Compose([
     transforms.Resize((224, 224)),   #must same as here
