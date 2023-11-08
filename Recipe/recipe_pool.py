@@ -1,6 +1,6 @@
 #import the pandas library
 
-from math import ceil
+from math import *
 import pandas as pd
 
 #unpickle the ingredient map
@@ -231,7 +231,7 @@ sub_map = pd.read_csv('ingr_subs.csv')
 # subs_needed_dict tracks subs needed for each recipe:
         # {recipe id: {ingr: sub}}
 
-def get_sub(l_ingr_ids, missing_ingr):
+def get_sub(set_ingr_ids, missing_ingr):
     """given a list of ingr ids and a missing ingr id, return a working sub if one exists"""
     all_subs = sub_map['ingr_id'].tolist() #a list of all ingr that have subs
     if missing_ingr in all_subs:
@@ -240,34 +240,117 @@ def get_sub(l_ingr_ids, missing_ingr):
         for sub_set in sub_opts:
             count_missing = 0
             for ingr in sub_set:
-                if ingr not in l_ingr_ids:
+                if ingr not in set_ingr_ids:
                     count_missing += 1
             if count_missing == 0:
                 return (missing_ingr, sub_set)
     return (missing_ingr, []) #we couldn't find a working sub
 
-def working_sub_exists(l_ingr_ids, missing_ingr):
+def working_sub_exists(set_ingr_ids, missing_ingr):
     """given a list of ingr ids and a missing ingredient's id, determine if a substitute is available, and if we can use it with our ingredients
     If we can use a sub: return (True, missing ingr, sub); otherwise (False, missing ingr, [])"""
     all_subs = sub_map['ingr_id'].tolist() #a list of all ingr that have subs
     if missing_ingr in all_subs:
         sub_index = all_subs.index(missing_ingr)
         sub_opts = eval(sub_map.iloc[sub_index]['substitutions'])
+        substitution_possibilities = []
         for sub_set in sub_opts:
             count_missing = 0
             for ingr in sub_set:
-                if ingr not in l_ingr_ids:
+                if ingr not in set_ingr_ids:
                     count_missing += 1
             if count_missing == 0:
-                return (True, missing_ingr, sub_set)
+                substitution_possibilities.append(sub_set)
+        if substitution_possibilities != []:
+            return (True, missing_ingr, sub_set)
     return (False, missing_ingr, []) #we couldn't find a working sub
 
 
+#avoid certain ingredients (allergies/dietary restrictions)
+def find_foods_to_avoid(allergy_list):
+    """given a list of SINGULAR ingredients to avoid, get all related ingredients' ids"""
+    ingr_names = []
+    all_ingr = ingr_map['raw_ingr'].tolist()
+
+    for food in allergy_list:
+        for ingr in all_ingr:
+            if food in ingr: #check if any part of the ingr full name has food name (for ex., peanut in peanut oil)
+                if ingr not in ingr_names: #make sure no repeats
+                    ingr_names.append(ingr)
+    avoid_ids = set(get_ingr_ids(ingr_names))
+    return avoid_ids
 
 
-def get_recipe_pool(l_ingr_ids):
+def allergen_can_be_subbed(avoid_ids, ingr_ids): #note ingr_ids, avoid_ids are SETS
+    allergen_sub_dict = {} #will be {allergen: [[sub opts]]}
+    for allergen in avoid_ids:
+        sub_possible, subbed, sub_opts = working_sub_exists(ingr_ids, allergen)
+        poss_subs = []
+        if sub_possible:
+            for opt in sub_opts:
+                opt_possible = True
+                for ingr in opt:
+                    if ingr in avoid_ids: #make sure sub doesn't include a different allergen
+                        opt_possible = False
+                if opt_possible:
+                    poss_subs.append(opt)  
+        allergen_sub_dict[allergen] = poss_subs
+    return allergen_sub_dict #returning a dictionary containing all avoid_ids, if no sub available, corresponds to empty list []
+    
+
+#flag down recipes that contain these to not include -- incorporate in pool?
+def recipe_contains_allergen(avoid_ids, ingr_ids, subs_for_recipe): #note ingr_ids is a SET, avoid_ids is a SET, subs_for_recipe is a DICT
+    """checks if a recipe, and all subs, include allergen; checks for poss subs for allergens
+    Returns True, {} if the recipe contains an allergen (and is impossible)
+    Returns False, updated subs_for_recipe if the recipe is possible"""
+    allergen_subs = allergen_can_be_subbed(avoid_ids, ingr_ids)
+    for ingr in ingr_ids:
+        #check if ingr is already being subbed:
+        if ingr in subs_for_recipe.keys():
+            #subs_for_recipe is {missing_ingr: [[possible subs][][]]}
+            options = subs_for_recipe[ingr] #a list of lists of ingr ids
+            for i in range(len(options)):
+                poss_sub = options[i]
+                for ingr_sub in poss_sub:
+                    if ingr_sub in avoid_ids: #this sub possibility doesn't work #see if allergen sub is possible!
+                        if allergen_subs[ingr_sub] == []: #check that we can't sub allergen
+                            options.remove(poss_sub)
+                            subs_for_recipe[ingr] = options
+                            break
+                        else: #sub is available:
+                            poss_sub.remove(ingr_sub)
+                            all_subs = []
+                            for allergen_sub_opt in allergen_subs[ingr_sub]:
+                                all_subs.append(poss_sub + allergen_sub_opt)
+                            for j in range(len(all_subs)):
+                                if j == 0:
+                                    options[i] = all_subs[j]
+                                else:
+                                    options.append(all_subs[j])
+                            subs_for_recipe[ingr] = options
+
+            if subs_for_recipe[ingr] == []:
+                return True, {} #one of the needed subs requires an allergen, so recipe_contains_allergen
+        elif ingr in avoid_ids: #if the ingr isn't being subbed, but it is an allergen
+            #ingr is an allergen #see if allergen sub is possible
+            if allergen_subs[ingr] == []:
+                return True, {}
+            else: #allergen sub is possible:
+                subs_for_recipe[ingr] = allergen_subs[ingr]
+    return False, subs_for_recipe
+
+
+
+
+            
+
+
+
+def get_recipe_pool(l_ingr_ids, allergy_list = []): #default for allergy list is [] unless provided
     subs_needed_dict = {}
     recipe_pool = {}
+    set_ingr_ids = set(l_ingr_ids)
+    avoid_ids = find_foods_to_avoid(allergy_list)
     
     # {recipe id: score}
     #score = #produce missing + # dairy missing + # other missing
@@ -288,12 +371,13 @@ def get_recipe_pool(l_ingr_ids):
         #protein:
         should_include = True
         for prot in recipe_protein:
-            if prot not in l_ingr_ids:
-                subs = working_sub_exists(l_ingr_ids, prot)
+            if prot not in set_ingr_ids:
+                subs = working_sub_exists(set_ingr_ids, prot)
                 if not subs[0]:
                     should_include = False
                     break
                 else:
+                    #subs is (True, missing_ingr, [[possibile subs][][]])
                     subs_for_recipe[prot] = subs[2]
                 
                     
@@ -301,8 +385,8 @@ def get_recipe_pool(l_ingr_ids):
             num_prod_miss = 0
             should_inc_prod = True
             for prod in recipe_produce:
-                if prod not in l_ingr_ids:
-                    subs = working_sub_exists(l_ingr_ids, prod)
+                if prod not in set_ingr_ids:
+                    subs = working_sub_exists(set_ingr_ids, prod)
                     if not subs[0]:
                         num_prod_miss += 1
                         if num_prod_miss > 1:
@@ -314,8 +398,8 @@ def get_recipe_pool(l_ingr_ids):
                 num_dairy_miss = 0
                 should_inc_dairy = True
                 for dairy in recipe_dairy:
-                    if dairy not in l_ingr_ids:
-                        subs = working_sub_exists(l_ingr_ids, dairy)
+                    if dairy not in set_ingr_ids:
+                        subs = working_sub_exists(set_ingr_ids, dairy)
                         if not subs[0]:
                             num_dairy_miss += 1
                             if num_dairy_miss > 1:
@@ -327,8 +411,8 @@ def get_recipe_pool(l_ingr_ids):
                     num_other_miss = 0
                     should_inc_o = True
                     for other in recipe_other:
-                        if other not in l_ingr_ids:
-                            subs = working_sub_exists(l_ingr_ids, other)
+                        if other not in set_ingr_ids:
+                            subs = working_sub_exists(set_ingr_ids, other)
                             if not subs[0]:
                                 num_other_miss += 1
                                 if num_other_miss > 5:
@@ -337,9 +421,12 @@ def get_recipe_pool(l_ingr_ids):
                             else:
                                 subs_for_recipe[other] = subs[2]
                     if should_inc_o:
-                        score = num_other_miss + num_dairy_miss + num_prod_miss
-                        recipe_pool[recipe_id] = score
-                        subs_needed_dict[recipe_id] = subs_for_recipe
+                        #check about allergens
+                        contains_allergens, subs_for_recipe = recipe_contains_allergen(avoid_ids, set_ingr_ids, subs_for_recipe)
+                        if not contains_allergens: #if we don't contain allergens
+                            score = num_other_miss + num_dairy_miss + num_prod_miss
+                            recipe_pool[recipe_id] = score
+                            subs_needed_dict[recipe_id] = subs_for_recipe
     return recipe_pool, subs_needed_dict #return the reecipe pool, and the subs that would be used for the recipes
 
 def filter_pool(recipe_pool):
@@ -376,6 +463,7 @@ def filter_pool(recipe_pool):
 
 def main(ingredients):
     ingr_ids = get_ingr_ids(ingredients)
+    allergy_list = ["peanut", "chicken"]
     recipe_pool, subs_needed = get_recipe_pool(ingr_ids)
     filtered_pool = filter_pool(recipe_pool)
     ordered_by_rating_pool = order_ratings(filtered_pool)
