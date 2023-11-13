@@ -106,21 +106,6 @@ def order_times(recipe_pool):
     recipe_pool_D = {id: recipe_pool[id] for id in sorted_keys}
     return recipe_pool_D
 
-def order_times(recipe_pool):
-    """Given a dictionary of recipe IDs in our pool, 
-        return an ordered list of recipe ids (lowest -> highest time to make)"""
-    recipe_pool_times = {}
-    all_recipe_ids = raw_recipes_df['id'].tolist()
-
-    for id in recipe_pool:
-        recipe_ind = all_recipe_ids.index(id)
-        recipe_pool_times[id] = raw_recipes_df.iloc[recipe_ind]['minutes']
-    recipe_pool_times = {key: value for key, value in sorted(recipe_pool_times.items(), key=lambda item: item[1], reverse=False)}
-    
-    sorted_keys = list(recipe_pool_times.keys())
-    recipe_pool_D = {id: recipe_pool[id] for id in sorted_keys}
-    return recipe_pool_D
-
 def order_fats(recipe_pool):
     """Given a dictionary of recipe IDs in our pool, 
         return an ordered list of recipe ids (lowest -> highest total fat)"""
@@ -461,13 +446,44 @@ def filter_pool(recipe_pool):
     
     return {key: val for key, val in sorted(filtered_recipes.items(), key=lambda item: item[1], reverse=True)}
 
-def main(ingredients):
+#def main(ingredients):
     ingr_ids = get_ingr_ids(ingredients)
     allergy_list = ["peanut", "chicken"]
     recipe_pool, subs_needed = get_recipe_pool(ingr_ids)
     filtered_pool = filter_pool(recipe_pool)
     ordered_by_rating_pool = order_ratings(filtered_pool)
+    ordered_by_rating_pool = order_sugars(filtered_pool)
     display_recipe(ordered_by_rating_pool, subs_needed)
+
+def main(ingredients):
+    ingr_ids = get_ingr_ids(ingredients)
+    allergens = input('Any allergies? Pleases separate with commas. If none, enter NA.')
+    print("Searching for Recipes")
+    if allergens == "NA":
+        recipe_pool, subs_needed = get_recipe_pool(ingr_ids)
+    else:
+        allergy_list = allergens.split(', ')
+        recipe_pool, subs_needed = get_recipe_pool(ingr_ids)
+    filtered_pool = filter_pool(recipe_pool)
+    ordered_pool = order_ratings(filtered_pool)
+
+    max_time = input('Maximum time to make (in minutes)? If none, enter 0.')
+    if max_time != "0":
+        ordered_pool = limit_time(ordered_pool, int(max_time))
+        print("HELLO")
+    
+    sort_criteria = input("Sort by additional criteria? 'Time' for results in increasing order of time. 'Sugars' for results in decreasing order of sugars. 'Fats' for results in decreasing order of fats. 'NA' for none.")
+    if sort_criteria == "Time":
+        ordered_pool = order_times(ordered_pool)
+    elif sort_criteria == "Sugars":
+        ordered_pool = order_sugars(ordered_pool)
+    elif sort_criteria == "Fats":
+        ordered_pool = order_fats(ordered_pool)
+    elif sort_criteria != "NA":
+        print("Not Recognized")
+
+    display_recipe(ordered_pool, subs_needed)
+
 
 
     
