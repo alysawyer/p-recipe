@@ -486,6 +486,33 @@ def main(ingredients):
 
 
 
+def main_no_input(ingredients, allergens, max_time, sort_criteria):
+    ingr_ids = get_ingr_ids(ingredients)
+    if allergens == "NA":
+        recipe_pool, subs_needed = get_recipe_pool(ingr_ids)
+    else:
+        allergy_list = allergens.split(', ')
+        recipe_pool, subs_needed = get_recipe_pool(ingr_ids)
+    filtered_pool = filter_pool(recipe_pool)
+    ordered_pool = order_ratings(filtered_pool)
+
+    if max_time != "0":
+        ordered_pool = limit_time(ordered_pool, int(max_time))
+    
+    #Sort by additional criteria? 'Time' for results in increasing order of time. 'Sugars' for results in decreasing order of sugars. 'Fats' for results in decreasing order of fats. 'NA' for none.")
+    if sort_criteria == "Time":
+        ordered_pool = order_times(ordered_pool)
+    elif sort_criteria == "Sugars":
+        ordered_pool = order_sugars(ordered_pool)
+    elif sort_criteria == "Fats":
+        ordered_pool = order_fats(ordered_pool)
+    elif sort_criteria != "NA":
+        print("Not Recognized")
+
+    return ordered_pool
+    #display_recipe(ordered_pool, subs_needed)
+
+
     
 ingredients = ["cream cheese", "chicken", "lettuce", "eggs", "milk", "butter", "bacon", "fresh chive", "white vinegar", "cheddar", "sour cream", "paprika"]
-main(ingredients)
+#main(ingredients)
