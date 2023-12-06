@@ -2,7 +2,7 @@ import torch
 import matplotlib.pyplot as plt
 import numpy as np
 
-model = torch.load('11-27-23_model_v2.pth', map_location=torch.device('cpu'))
+model = torch.load('checkpoint_epoch_36.pth', map_location=torch.device('cpu'))
 
 import requests
 from PIL import Image
@@ -15,7 +15,7 @@ transforms_test = transforms.Compose([
     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 ])
 
-labels = ["apples", "aubergine", "avocado", "bananas", "beans", "blueberries", "bread", "broccoli", "butter", "cake mix", "carrots", "cheese", "cherry", "chicken", "coffee", "corn", "eggs", "flour", "ginger", "green beans", "green chilies", "ham", "honey", "jam", "juice", "kiwi", "lemon", "lettuce", "lime", "mango", "milk", "mushrooms", "nuts", "oil", "onion", "orange", "pasta", "peach", "peas", "peppers", "pineapple", "potato", "rice", "spices", "spinach", "strawberry", "sugar", "sweet potato", "tea", "tomato sauce", "tomatoes", "tuna", "vinegar", "water", "watermelon", "yogurt", "zuccini"]
+labels = ["BEANS", "CAKE_MIX", "COFFEE", "CORN", "FLOUR", "HONEY", "JAM", "JUICE", "Lemon", "NUTS", "OIL", "Onion", "Orange", "PASTA", "Peas", "Potato", "RICE", "SPICES", "SUGAR", "Strawberry", "TEA", "TOMATO_SAUCE", "TUNA", "VINEGAR", "WATER","Zucchini", "apples", "aubergine", "avocado", "bananas", "blueberries", "bread", "broccoli", "butter", "carrots", "cheese", "cherry", "chicken", "eggs", "ginger", "green beans", "green chilies", "ham", "kiwi", "lettuce", "lime", "mango", "milk", "mushrooms", "peach", "peppers", "pineapple", "spinach", "sweet_potato", "tomatoes", "watermelon", "yoghurt"]
 
 def predict(inp):
     inp = transforms_test(inp)
@@ -35,6 +35,7 @@ def predict2(inp):
         return pred_class
     
 def predict3(inp):
+    model.eval()
     # Process image
     inp = transforms_test(inp)
     model_input = inp.unsqueeze(0)
@@ -43,10 +44,16 @@ def predict3(inp):
     probs = torch.exp(model.forward(model_input))
     
     # Top probs
-    top_probs, top_labs = probs.topk(5)
+    top_probs, top_labs = probs.topk(10)
     top_probs = top_probs.detach().numpy().tolist()[0] 
     top_labs = top_labs.detach().numpy().tolist()[0]
+    top_labels = []
+    for i in range(len(top_probs)):
+        if top_probs[i] > 20:
+            top_labels.append(labels[top_labs[i]])
+        else:
+            break
     
-    # Convert indices to classes
-    top_labels = [labels[lab] for lab in top_labs]
+    # # Convert indices to classes
+    # top_labels = [labels[lab] for lab in top_labs]
     return top_probs, top_labels
