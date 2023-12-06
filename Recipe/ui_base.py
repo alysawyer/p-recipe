@@ -73,7 +73,7 @@ def main_no_input(ingredients, allergens, max_time, sort_criteria):
     return print_recipe(ordered_pool, subs_needed)
 
 def process_image(image):
-    return predict(image)
+    return predict3(image)
 
 with gr.Blocks() as demo:
     error_box = gr.Textbox(label="Error", visible=False)
@@ -83,6 +83,7 @@ with gr.Blocks() as demo:
     allergens = gr.Textbox(label="Foods to Avoid")
     max_time = gr.Textbox(label="Max Time", info="If no limit, select 0!")
     sort_criteria = gr.Radio(["Time", "Sugars", "Fats", "NA"], label="Sort Criteria", info="How should we sort the recipes?")
+    
     go_btn = gr.Button("Get recipes")
 
     with gr.Accordion("Results Loading...") as outputLong:
@@ -100,13 +101,15 @@ with gr.Blocks() as demo:
             return {error_box: gr.Textbox(value="Enter allergen. If none, enter NA", visible=True)}
         elif len(max_time) == 0:
             return {error_box: gr.Textbox(value="Enter max time. If none, enter 0", visible=True)}
-        #result_recipes = main_no_input(ingr, allergens, max_time, sort_criteria)
-        result_recipes = []
+        image_results = process_image(pic)
+        full_ingr = image_results + ingr
+        result_recipes = main_no_input(full_ingr, allergens, max_time, sort_criteria)
+        #result_recipes = []
         for i in range(5- len(result_recipes)):
             result_recipes.append("No additional Results")
         return {
             outputLong: gr.Column("Open for Recipe Results!"),
-            image_output: process_image(pic),
+            image_output: image_results,
             results1: result_recipes[0],
             results2: result_recipes[1],
             results3: result_recipes[2],
@@ -114,6 +117,6 @@ with gr.Blocks() as demo:
             results5: result_recipes[4]
         }
 
-    go_btn.click(fn=submit, inputs=[ingr, allergens, max_time, sort_criteria, input_im], outputs=[outputLong, image_output, results1, results2, results3, results4, results5], api_name="recipe")
+    go_btn.click(fn=submit, inputs=[ingr, allergens, max_time, sort_criteria], outputs=[outputLong, image_output, results1, results2, results3, results4, results5], api_name="recipe")
 
 demo.launch()
