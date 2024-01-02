@@ -2,7 +2,7 @@ import torch
 import matplotlib.pyplot as plt
 import numpy as np
 
-model = torch.load('checkpoint_epoch_36.pth', map_location=torch.device('cpu'))
+model = torch.load('11-27-23_model_v2.pth', map_location=torch.device('cpu'))
 
 import requests
 from PIL import Image
@@ -36,8 +36,9 @@ def predict2(inp):
     
 def predict3(inp):
     model.eval()
+    im = Image.fromarray(inp)
     # Process image
-    inp = transforms_test(inp)
+    inp = transforms_test(im)
     model_input = inp.unsqueeze(0)
     
     # Probs
@@ -56,4 +57,4 @@ def predict3(inp):
     
     # # Convert indices to classes
     # top_labels = [labels[lab] for lab in top_labs]
-    return top_probs, top_labels
+    return top_labels

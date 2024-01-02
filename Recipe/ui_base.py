@@ -1,7 +1,9 @@
 from recipe_pool import *
 
 import gradio as gr
+import numpy as np
 
+from PIL import Image
 from model import *
 
 
@@ -48,7 +50,7 @@ def print_recipe(recipe_pool,subs_needed):
     return recipes_to_display
 
 def main_no_input(ingredients, allergens, max_time, sort_criteria):
-    ingr_ids = get_ingr_ids(eval(ingredients))
+    ingr_ids = get_ingr_ids(ingredients)
     if allergens == "NA":
         recipe_pool, subs_needed = get_recipe_pool(ingr_ids)
     else:
@@ -73,12 +75,14 @@ def main_no_input(ingredients, allergens, max_time, sort_criteria):
     return print_recipe(ordered_pool, subs_needed)
 
 def process_image(image):
+    #image = np.ndarray(image)
     return predict3(image)
+    
 
 with gr.Blocks() as demo:
     error_box = gr.Textbox(label="Error", visible=False)
 
-    input_im = gr.Image(type = 'pil', label="Upload Images of Items HERE!")
+    input_im = gr.Image(label="Upload Images of Items HERE!", type="numpy")
     ingr = gr.Textbox(label="Ingredients")
     allergens = gr.Textbox(label="Foods to Avoid")
     max_time = gr.Textbox(label="Max Time", info="If no limit, select 0!")
@@ -87,7 +91,6 @@ with gr.Blocks() as demo:
     go_btn = gr.Button("Get recipes")
 
     with gr.Accordion("Results Loading...") as outputLong:
-        image_output = gr.Textbox("Loading Image")
         results1 = gr.Textbox("Loading...", label="Recipe 1")
         results2 = gr.Textbox("", label="Recipe 2")
         results3 = gr.Textbox("", label="Recipe 3")
@@ -102,14 +105,13 @@ with gr.Blocks() as demo:
         elif len(max_time) == 0:
             return {error_box: gr.Textbox(value="Enter max time. If none, enter 0", visible=True)}
         image_results = process_image(pic)
-        full_ingr = image_results + ingr
+        full_ingr = image_results + eval(ingr)
         result_recipes = main_no_input(full_ingr, allergens, max_time, sort_criteria)
         #result_recipes = []
         for i in range(5- len(result_recipes)):
             result_recipes.append("No additional Results")
         return {
             outputLong: gr.Column("Open for Recipe Results!"),
-            image_output: image_results,
             results1: result_recipes[0],
             results2: result_recipes[1],
             results3: result_recipes[2],
@@ -117,6 +119,6 @@ with gr.Blocks() as demo:
             results5: result_recipes[4]
         }
 
-    go_btn.click(fn=submit, inputs=[ingr, allergens, max_time, sort_criteria], outputs=[outputLong, image_output, results1, results2, results3, results4, results5], api_name="recipe")
+    go_btn.click(fn=submit, inputs=[ingr, allergens, max_time, sort_criteria, input_im], outputs=[outputLong, results1, results2, results3, results4, results5], api_name="recipe")
 
 demo.launch()
