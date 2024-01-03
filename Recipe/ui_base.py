@@ -83,8 +83,8 @@ with gr.Blocks() as demo:
     error_box = gr.Textbox(label="Error", visible=False)
 
     input_im = gr.Image(label="Upload Images of Items HERE!", type="numpy")
-    ingr = gr.Textbox(label="Ingredients")
-    allergens = gr.Textbox(label="Foods to Avoid")
+    ingr = gr.Textbox(label="Ingredients", info = "ex. apples, bananas, oranges")
+    allergens = gr.Textbox(label="Foods to Avoid", info = "ex. almond, peanut")
     max_time = gr.Textbox(label="Max Time", info="If no limit, select 0!")
     sort_criteria = gr.Radio(["Time", "Sugars", "Fats", "NA"], label="Sort Criteria", info="How should we sort the recipes?")
     
@@ -105,7 +105,8 @@ with gr.Blocks() as demo:
         elif len(max_time) == 0:
             return {error_box: gr.Textbox(value="Enter max time. If none, enter 0", visible=True)}
         image_results = process_image(pic)
-        full_ingr = image_results + eval(ingr)
+        ingr_list = ingr.split(', ')
+        full_ingr = image_results + ingr_list
         result_recipes = main_no_input(full_ingr, allergens, max_time, sort_criteria)
         #result_recipes = []
         for i in range(5- len(result_recipes)):
