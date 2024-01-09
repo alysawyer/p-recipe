@@ -1,7 +1,7 @@
 
 # P-Recipe
 
-Identifying viable recipes from a picture of ingredients. Full project specification availible [here](https://docs.google.com/document/d/1Z-IRTpez5aXF5pA3BzhH3qOOYFAwqvfhkIYvM87OLm4/edit#heading=h.60k1wnj5cckc).
+Identifying viable recipes from a picture of ingredients. Full project specification available [here](https://docs.google.com/document/d/1Z-IRTpez5aXF5pA3BzhH3qOOYFAwqvfhkIYvM87OLm4/edit#heading=h.60k1wnj5cckc).
 
 Project sponsored by the Claremont College's [P-ai club](https://www.p-ai.org/) during the 2023 fall semester. 
 
