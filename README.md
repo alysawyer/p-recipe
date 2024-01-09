@@ -17,11 +17,6 @@ Project sponsored by the Claremont College's [P-ai club](https://www.p-ai.org/) 
 
 - [@alysawyer](https://www.github.com/alysawyer)
 
-## Demo
-
-Insert gif or link to demo
-
-
 ## Features
 
 - Fully functional UI that takes in an image and utilizes a computer vision model to identify the foods in the image
@@ -52,3 +47,11 @@ Below is a sample process that can be used to get the program working:
 ```bash
   python ui_base.py
 ```
+
+## Demo
+
+Below is an example input image with example user input/specifications: 
+![user-input](https://github.com/alysawyer/p-recipe/assets/12618624/43988f7c-45e5-4580-b987-f241c9ead710)
+
+Results from that input: 
+![results](https://github.com/alysawyer/p-recipe/assets/12618624/8485d2b8-dbb7-46af-acd6-ac97cafac1b8)
