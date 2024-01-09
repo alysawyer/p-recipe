@@ -28,6 +28,7 @@ Insert gif or link to demo
 - Based on the foods in the image, recipes are suggested for the user
 - Users can specify what foods to avoid, maximum time limit to cook when searching for recipes
 - Recipe results can be filtered by amount of time to make it and sugars/fats 
+- Additional ingredients can be inputted 
 
 ## Installation
 
